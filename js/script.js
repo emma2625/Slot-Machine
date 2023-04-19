@@ -79,7 +79,7 @@ playGameBtn.addEventListener('click', e => {
                 winnings = (30/100) * pot;
 
                 result.innerText = 'WIN';
-                total += winnings
+                total += pot + winnings
             }
             
             else{
