@@ -48,6 +48,8 @@ playGameBtn.addEventListener('click', e => {
     if (pot === 0) {
         return alert('Please stake an amount')
     }
+
+   
     let track = 0;
     
     const game = setInterval(()=>{
@@ -82,6 +84,11 @@ playGameBtn.addEventListener('click', e => {
             
             else{
                 result.innerText = "Try Again"
+                if (total < 10) {
+                    total = 1000;
+                    pot = 0;
+                    return alert('Game Over');
+                 }
             }
 
             pot = 0;
