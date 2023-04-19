@@ -1,0 +1,242 @@
+:root{
+    --ten: #7AA874;
+    --twenty: #F7DB6A;
+    --thirty: #EBB02D;
+    --fifty: #D864A9;
+}
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.wrapper{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    gap: 40px;
+    background-image: linear-gradient(45deg, purple, lime);
+}
+.wrapper > *{
+    flex: 1;
+}
+
+.startGame{
+    text-align: center;
+
+}
+
+.startGame button{
+    background-color: #f902f9b6;
+    border: none;
+    border-bottom: 1px solid #ffffff;
+    padding: 20px 50px;
+    border-radius: 20px 20px 10px 10px;
+    color: #ffffff;
+    transform-origin: 0%;
+    transform: rotateX(40deg);
+    box-shadow: 0 30px 0 0 #f902f9b6;
+    font-weight: bold;
+}
+
+.startGame button:active{
+    box-shadow: 0 27px 0 0 #f902f9b6;
+}
+
+
+/* STAKES */
+.stakes{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+}
+
+.stakes button{
+    border: none;
+    border-bottom: 1px solid #ffffff;
+    padding: 20px 50px;
+    border-radius: 20px 20px 10px 10px;
+    color: #ffffff;
+    transform-origin: 0%;
+    transform: rotateX(40deg);
+    font-size: 30px;
+    transition: scale .3s ease;
+}
+
+.stakes button:active{
+    scale: 1.1;
+}
+.stakes button:nth-child(1){
+    background-color: var(--ten) !important;
+    box-shadow: 0 30px 0 0 var(--ten);
+}
+.stakes button:nth-child(2){
+    background-color: var(--twenty) !important;
+    box-shadow: 0 30px 0 0 var(--twenty);
+}
+.stakes button:nth-child(3){
+    background-color: var(--thirty) !important;
+    box-shadow: 0 30px 0 0 var(--thirty);
+}
+.stakes button:nth-child(4){
+    background-color: var(--fifty) !important;
+    box-shadow: 0 30px 0 0 var(--fifty);
+}
+
+
+/* GAME */
+.game{
+    position: relative;
+}
+img[alt=machine]{
+    position: relative;
+    z-index: 999;
+}
+.result{
+    position: absolute;
+    background-color: #DF2E38;
+    color: #ffffff;
+    width: 220px;
+    height: 100px;
+    top: 2%;
+    left: 25%;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    font-family: cursive;
+}
+
+
+img[alt=slot-1],
+img[alt=slot-2],
+img[alt=slot-3]{
+    position: absolute;
+    width: 70px;
+    padding: 0 5px;
+    top: 27%;
+    left: 24%;
+    background-color: #ffffff;
+    height: 190px;
+    object-fit: contain;
+    object-position: center;
+}
+img[alt=slot-2]{
+    left: 43%;;
+}
+img[alt=slot-3]{
+    left: 61%;;
+}
+
+
+/* STAKED */
+.staked{
+    background-color: #425F57;
+    width: 80%;
+    height: 80px;
+    margin: 0 auto;
+    padding: 10px;
+    z-index: 99999;
+    left: 15%;
+    border: 2px groove #749F82;
+    display: flex;
+    color: #ffffff;
+    font-family: cursive;
+    border-radius: 20px 20px 5px 5px;
+    position: relative;
+    left: -0;
+    bottom: 65px;
+}
+
+img[alt=coins]{
+    width: 50px;
+}
+
+.total{
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    font-size: 30px;
+}
+
+
+.disco{
+    animation: disco .5s linear alternate infinite;
+}
+
+@keyframes disco {
+    0%{
+        background-image: linear-gradient(0deg, purple, lime);
+    }
+    25%{
+        background-image: linear-gradient(45deg, purple, lime);
+    } 
+    50%{
+        background-image: linear-gradient(90deg, purple, lime);
+    }
+    75%{
+        background-image: linear-gradient(180deg, purple, lime);
+    }
+    100%{
+        background-image: linear-gradient(360deg, purple, lime);
+    }
+}
+
+@media screen and (max-width: 992.9px) {
+    .result{
+      left: 29%;
+    }
+    img[alt=slot-1] {
+        left: 28%;
+    }
+    img[alt=slot-2] {
+        left: 48%;
+    }
+    img[alt=slot-3] {
+        left: 69%;
+    }
+
+    .staked{
+        left: 7%;
+    }
+}
+
+
+@media screen and (max-width: 567px) {
+    .wrapper{
+        flex-direction: column;
+        height: 100%;
+    }
+    .stakes{
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .stakes button{
+        padding: 14px 8px;
+        font-size: 23px;
+    }
+
+    img[alt=machine]{
+        width: 100%;
+    }
+
+    .game{
+        left: -31px;
+    }
+
+    .staked{
+        width: 92%;
+    }
+    .startGame{
+        position: relative;
+        bottom: 100px;
+    }
+    .startGame button{
+        padding: 20px 154px;
+        font-size: 18px;
+    }
+}

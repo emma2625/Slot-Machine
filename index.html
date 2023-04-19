@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casino</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <section>
+        <div class="wrapper">
+            <div class="stakes">
+                <button data-amount="10">$10</button>
+                <button data-amount="20">$20</button>
+                <button data-amount="30">$30</button>
+                <button data-amount="50">$50</button>
+            </div>
+            <div class="game">
+                <div class="result">WIN</div>
+                <img src="images/machine.png" alt="machine" class="machine">
+
+                <img src="images/1.png" alt="slot-1" class="slot slot-1">
+                <img src="images/2.png" alt="slot-2" class="slot slot-2">
+                <img src="images/3.png" alt="slot-3" class="slot slot-2">
+
+
+                <div class="staked">
+                    <div class="total">
+                        <img src="images/coins.png" alt="coins">
+                        <div>
+                            $<span id="total">1000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="startGame">
+                <button id="playGame">PLAY</button>
+            </div>
+
+        </div>
+    </section>
+
+
+    <script src="js/script.js"></script>
+</body>
+</html>
