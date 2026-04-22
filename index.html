@@ -2,46 +2,582 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casino</title>
-    <link rel="stylesheet" href="css/style.css">
+    <title>Neon Slots</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-green: #00ff88;
+            --neon-pink: #ff2d78;
+            --neon-blue: #00d4ff;
+            --neon-yellow: #ffd700;
+            --felt: #0a2a1a;
+            --felt-light: #0f3d26;
+            --card-bg: #071a10;
+            --stake-10: #22c55e;
+            --stake-20: #eab308;
+            --stake-30: #f97316;
+            --stake-50: #ec4899;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--felt);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ── Felt texture overlay ── */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                repeating-linear-gradient(45deg, rgba(0,255,136,.03) 0px, rgba(0,255,136,.03) 1px, transparent 1px, transparent 8px),
+                repeating-linear-gradient(-45deg, rgba(0,255,136,.03) 0px, rgba(0,255,136,.03) 1px, transparent 1px, transparent 8px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* ── Typography ── */
+        .font-casino { font-family: 'Orbitron', monospace; }
+
+        /* ── Neon glow helpers ── */
+        .glow-green  { text-shadow: 0 0 10px var(--neon-green), 0 0 30px var(--neon-green); }
+        .glow-pink   { text-shadow: 0 0 10px var(--neon-pink),  0 0 30px var(--neon-pink); }
+        .glow-yellow { text-shadow: 0 0 10px var(--neon-yellow),0 0 30px var(--neon-yellow); }
+
+        .box-glow-green { box-shadow: 0 0 15px rgba(0,255,136,.4), 0 0 40px rgba(0,255,136,.15), inset 0 1px 0 rgba(255,255,255,.08); }
+        .box-glow-pink  { box-shadow: 0 0 15px rgba(255,45,120,.5),0 0 40px rgba(255,45,120,.2); }
+
+        /* ── Machine body ── */
+        .machine-body {
+            background: linear-gradient(160deg, #0d2b1a 0%, #071410 50%, #0a1f2e 100%);
+            border: 1px solid rgba(0,255,136,.25);
+            border-radius: 2rem;
+            box-shadow:
+                0 0 0 1px rgba(0,255,136,.1),
+                0 30px 80px rgba(0,0,0,.8),
+                inset 0 1px 0 rgba(255,255,255,.06);
+            position: relative;
+            overflow: visible;
+        }
+
+        /* ── Screen / reel window ── */
+        .reel-window {
+            background: #000;
+            border: 2px solid rgba(0,212,255,.3);
+            border-radius: 1rem;
+            box-shadow:
+                inset 0 0 40px rgba(0,0,0,.9),
+                0 0 20px rgba(0,212,255,.2),
+                inset 0 0 1px rgba(0,212,255,.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Scanlines effect */
+        .reel-window::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,.15) 3px, rgba(0,0,0,.15) 4px);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* ── Individual reel ── */
+        .reel {
+            background: linear-gradient(180deg, rgba(0,0,0,.8) 0%, rgba(10,20,15,.6) 50%, rgba(0,0,0,.8) 100%);
+            border-radius: .5rem;
+            border: 1px solid rgba(255,255,255,.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: transform .1s;
+        }
+
+        .reel-shine {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,.04) 40%, rgba(255,255,255,.08) 50%, rgba(255,255,255,.04) 60%, transparent 100%);
+            pointer-events: none;
+        }
+
+        /* Spinning animation */
+        .reel.spinning .reel-emoji {
+            animation: spinReel .08s linear infinite;
+        }
+
+        @keyframes spinReel {
+            0%   { transform: translateY(-100%) scale(.8); opacity: 0; }
+            50%  { transform: translateY(0)     scale(1);   opacity: 1; }
+            100% { transform: translateY(100%)  scale(.8); opacity: 0; }
+        }
+
+        /* ── Result banner ── */
+        .result-banner {
+            font-family: 'Orbitron', monospace;
+            letter-spacing: .15em;
+            transition: all .4s ease;
+        }
+
+        /* ── Stake buttons ── */
+        .stake-btn {
+            font-family: 'Orbitron', monospace;
+            font-weight: 700;
+            border: none;
+            border-radius: .75rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform .15s ease, box-shadow .15s ease, opacity .3s ease;
+            letter-spacing: .05em;
+        }
+
+        .stake-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+            transition: left .4s ease;
+        }
+
+        .stake-btn:hover::before { left: 100%; }
+        .stake-btn:hover  { transform: translateY(-3px); }
+        .stake-btn:active { transform: translateY(0) scale(.97); }
+
+        .stake-btn.disabled {
+            opacity: .35;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .stake-btn.active-stake {
+            outline: 3px solid white;
+            outline-offset: 3px;
+        }
+
+        /* ── Play button ── */
+        .play-btn {
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            letter-spacing: .2em;
+            background: linear-gradient(135deg, #00ff88 0%, #00c060 100%);
+            color: #071a10;
+            border: none;
+            border-radius: 1rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform .2s ease, box-shadow .2s ease;
+            box-shadow: 0 0 20px rgba(0,255,136,.5), 0 8px 25px rgba(0,0,0,.4);
+        }
+
+        .play-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: conic-gradient(transparent 0deg, rgba(255,255,255,.15) 60deg, transparent 120deg);
+            animation: rotateSweep 3s linear infinite;
+        }
+
+        @keyframes rotateSweep {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        .play-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 0 35px rgba(0,255,136,.7), 0 12px 30px rgba(0,0,0,.5);
+        }
+
+        .play-btn:active {
+            transform: translateY(1px) scale(.98);
+            box-shadow: 0 0 15px rgba(0,255,136,.4);
+        }
+
+        .play-btn:disabled {
+            background: linear-gradient(135deg, #4a7a5a, #2a4a3a);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ── Balance display ── */
+        .balance-display {
+            background: linear-gradient(135deg, rgba(0,20,12,.9), rgba(0,10,8,.95));
+            border: 1px solid rgba(0,255,136,.2);
+            border-radius: 1rem;
+            box-shadow: inset 0 2px 10px rgba(0,0,0,.5), 0 0 20px rgba(0,255,136,.1);
+        }
+
+        /* ── Jackpot / win flash ── */
+        @keyframes jackpotPulse {
+            0%, 100% { background-color: var(--felt); }
+            25%       { background-color: #1a0030; }
+            50%       { background-color: #001a0a; }
+            75%       { background-color: #1a1000; }
+        }
+
+        .jackpot-flash { animation: jackpotPulse .4s ease infinite; }
+
+        @keyframes winBounce {
+            0%, 100% { transform: scale(1); }
+            40%       { transform: scale(1.15); }
+            70%       { transform: scale(.95); }
+        }
+
+        .win-bounce { animation: winBounce .6s ease forwards; }
+
+        /* ── Toast ── */
+        .toast {
+            position: fixed;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(-120%);
+            background: rgba(10,30,20,.95);
+            border: 1px solid var(--neon-pink);
+            color: var(--neon-pink);
+            font-family: 'Orbitron', monospace;
+            font-size: .75rem;
+            letter-spacing: .1em;
+            padding: .75rem 1.5rem;
+            border-radius: .75rem;
+            box-shadow: 0 0 20px rgba(255,45,120,.4);
+            z-index: 1000;
+            transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+        }
+
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ── Decorative top light bar ── */
+        .light-bar {
+            height: 6px;
+            border-radius: 9999px;
+            background: linear-gradient(90deg, var(--neon-pink), var(--neon-blue), var(--neon-green), var(--neon-yellow), var(--neon-pink));
+            background-size: 300% 100%;
+            animation: lightFlow 3s linear infinite;
+        }
+
+        @keyframes lightFlow {
+            0%   { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+
+        /* ── Reel win highlight ── */
+        .reel.match {
+            animation: matchGlow .6s ease 3;
+            box-shadow: 0 0 20px var(--neon-yellow), inset 0 0 10px rgba(255,215,0,.2);
+        }
+
+        @keyframes matchGlow {
+            0%, 100% { box-shadow: none; }
+            50%       { box-shadow: 0 0 25px var(--neon-yellow), inset 0 0 15px rgba(255,215,0,.3); }
+        }
+
+        /* ── Pot display ── */
+        .pot-display {
+            background: linear-gradient(135deg, rgba(255,45,120,.15), rgba(255,45,120,.05));
+            border: 1px solid rgba(255,45,120,.3);
+            border-radius: .75rem;
+        }
+
+        /* ── Responsive tweaks ── */
+        @media (max-width: 640px) {
+            .reel { font-size: 2.5rem; }
+        }
+    </style>
 </head>
-<body>
-    <section>
-        <div class="wrapper">
-            <div class="stakes">
-                <button data-amount="10">$10</button>
-                <button data-amount="20">$20</button>
-                <button data-amount="30">$30</button>
-                <button data-amount="50">$50</button>
+<body class="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 py-8">
+
+    <!-- Toast notification -->
+    <div id="toast" class="toast text-sm font-casino"></div>
+
+    <div class="w-full max-w-2xl space-y-5 relative z-10">
+
+        <!-- Header -->
+        <div class="text-center">
+            <div class="light-bar mb-3"></div>
+            <h1 class="font-casino text-4xl sm:text-5xl font-black tracking-widest glow-green" style="color:var(--neon-green)">NEON SLOTS</h1>
+            <p class="text-xs tracking-[.3em] mt-1" style="color:rgba(0,255,136,.45)">FORTUNE FAVORS THE BOLD</p>
+        </div>
+
+        <!-- Machine body -->
+        <div class="machine-body p-5 sm:p-7">
+
+            <!-- Result banner -->
+            <div id="resultBanner" class="result-banner text-center py-2 px-4 rounded-xl mb-5 text-sm font-casino tracking-widest" style="background:rgba(0,212,255,.08); border:1px solid rgba(0,212,255,.2); color:rgba(0,212,255,.7);">
+                PLACE YOUR BETS
             </div>
-            <div class="game">
-                <div class="result">WIN</div>
-                <img src="images/machine.png" alt="machine" class="machine">
 
-                <img src="images/1.png" alt="slot-1" class="slot slot-1">
-                <img src="images/2.png" alt="slot-2" class="slot slot-2">
-                <img src="images/3.png" alt="slot-3" class="slot slot-2">
-
-
-                <div class="staked">
-                    <div class="total">
-                        <img src="images/coins.png" alt="coins">
-                        <div>
-                            $<span id="total">1000</span>
-                        </div>
+            <!-- Reel window -->
+            <div class="reel-window p-3 sm:p-4 mb-5">
+                <div class="flex gap-3 sm:gap-4">
+                    <div id="reel1" class="reel flex-1 h-32 sm:h-40 rounded-lg">
+                        <div class="reel-shine"></div>
+                        <span class="reel-emoji select-none">🍒</span>
+                    </div>
+                    <div id="reel2" class="reel flex-1 h-32 sm:h-40 rounded-lg">
+                        <div class="reel-shine"></div>
+                        <span class="reel-emoji select-none">🔔</span>
+                    </div>
+                    <div id="reel3" class="reel flex-1 h-32 sm:h-40 rounded-lg">
+                        <div class="reel-shine"></div>
+                        <span class="reel-emoji select-none">⭐</span>
                     </div>
                 </div>
             </div>
-            <div class="startGame">
-                <button id="playGame">PLAY</button>
+
+            <!-- Balance + Pot row -->
+            <div class="flex gap-3 mb-5">
+                <!-- Balance -->
+                <div class="balance-display flex-1 p-3 flex items-center gap-3">
+                    <span class="text-2xl">🪙</span>
+                    <div>
+                        <div class="text-xs tracking-widest font-casino" style="color:rgba(0,255,136,.5)">BALANCE</div>
+                        <div class="font-casino text-xl font-bold glow-green" style="color:var(--neon-green)">$<span id="totalDisplay">1000</span></div>
+                    </div>
+                </div>
+                <!-- Pot -->
+                <div class="pot-display flex-1 p-3 flex items-center gap-3">
+                    <span class="text-2xl">💰</span>
+                    <div>
+                        <div class="text-xs tracking-widest font-casino" style="color:rgba(255,45,120,.6)">POT</div>
+                        <div class="font-casino text-xl font-bold" style="color:var(--neon-pink)">$<span id="potDisplay">0</span></div>
+                    </div>
+                </div>
             </div>
 
+            <!-- Stake buttons -->
+            <div class="grid grid-cols-4 gap-2 sm:gap-3 mb-5">
+                <button class="stake-btn py-3 sm:py-4 text-sm sm:text-base text-white" data-amount="10"
+                    style="background:linear-gradient(135deg,#16a34a,#15803d); box-shadow:0 6px 0 #14532d, 0 0 15px rgba(34,197,94,.3)">
+                    $10
+                </button>
+                <button class="stake-btn py-3 sm:py-4 text-sm sm:text-base text-white" data-amount="20"
+                    style="background:linear-gradient(135deg,#ca8a04,#a16207); box-shadow:0 6px 0 #713f12, 0 0 15px rgba(234,179,8,.3)">
+                    $20
+                </button>
+                <button class="stake-btn py-3 sm:py-4 text-sm sm:text-base text-white" data-amount="30"
+                    style="background:linear-gradient(135deg,#ea580c,#c2410c); box-shadow:0 6px 0 #7c2d12, 0 0 15px rgba(249,115,22,.3)">
+                    $30
+                </button>
+                <button class="stake-btn py-3 sm:py-4 text-sm sm:text-base text-white" data-amount="50"
+                    style="background:linear-gradient(135deg,#db2777,#be185d); box-shadow:0 6px 0 #831843, 0 0 15px rgba(236,72,153,.3)">
+                    $50
+                </button>
+            </div>
+
+            <!-- Play button -->
+            <button id="playBtn" class="play-btn w-full py-4 sm:py-5 text-lg sm:text-xl font-casino relative overflow-hidden">
+                <span class="relative z-10">▶ &nbsp; SPIN</span>
+            </button>
+
         </div>
-    </section>
 
+        <!-- Paytable -->
+        <div class="rounded-xl p-4 text-xs sm:text-sm space-y-1.5 font-casino tracking-wider"
+             style="background:rgba(0,0,0,.4); border:1px solid rgba(0,255,136,.1); color:rgba(0,255,136,.5)">
+            <div class="flex justify-between"><span>💎💎💎 JACKPOT</span><span class="glow-yellow" style="color:var(--neon-yellow)">5× POT</span></div>
+            <div class="flex justify-between"><span>🔶🔶🔶 THREE OF A KIND</span><span>2× POT</span></div>
+            <div class="flex justify-between"><span>🔷🔷　 TWO OF A KIND</span><span>1.3× POT</span></div>
+            <div class="flex justify-between"><span>✗ NO MATCH</span><span style="color:rgba(255,45,120,.6)">LOSE BET</span></div>
+        </div>
 
-    <script src="js/script.js"></script>
+        <div class="light-bar"></div>
+    </div>
+
+    <script>
+    (() => {
+        /* ── State ── */
+        const SYMBOLS  = ['💎','🍒','🔔','⭐','🍋','🍇'];
+        // index 0 = jackpot symbol
+        const JACKPOT_SYM = '💎';
+
+        let total    = 1000;
+        let pot      = 0;
+        let spinning = false;
+        let lastValidStake = 10; // tracks last used stake amount
+
+        /* ── DOM refs ── */
+        const totalDisplay = document.getElementById('totalDisplay');
+        const potDisplay   = document.getElementById('potDisplay');
+        const resultBanner = document.getElementById('resultBanner');
+        const playBtn      = document.getElementById('playBtn');
+        const reels        = [
+            document.getElementById('reel1'),
+            document.getElementById('reel2'),
+            document.getElementById('reel3'),
+        ];
+        const stakeButtons = document.querySelectorAll('.stake-btn');
+        const toastEl      = document.getElementById('toast');
+
+        /* ── Toast ── */
+        let toastTimer;
+        function showToast(msg) {
+            toastEl.textContent = msg;
+            toastEl.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2600);
+        }
+
+        /* ── Render helpers ── */
+        function renderBalance() {
+            totalDisplay.textContent = total;
+            potDisplay.textContent   = pot;
+            updateStakeButtons();
+        }
+
+        function updateStakeButtons() {
+            stakeButtons.forEach(btn => {
+                const amt = parseInt(btn.dataset.amount);
+                if (amt > total) {
+                    btn.classList.add('disabled');
+                } else {
+                    btn.classList.remove('disabled');
+                }
+            });
+
+            // Ensure highest affordable stake stays available (never fully block last valid option)
+            // Already handled by above logic — buttons simply show as disabled if can't afford
+        }
+
+        function setResult(text, type = 'info') {
+            const styles = {
+                info:    { bg: 'rgba(0,212,255,.08)',  border: 'rgba(0,212,255,.25)',  color: 'rgba(0,212,255,.8)'    },
+                win:     { bg: 'rgba(0,255,136,.12)',  border: 'rgba(0,255,136,.4)',   color: 'var(--neon-green)'     },
+                jackpot: { bg: 'rgba(255,215,0,.15)',  border: 'rgba(255,215,0,.6)',   color: 'var(--neon-yellow)'    },
+                lose:    { bg: 'rgba(255,45,120,.08)', border: 'rgba(255,45,120,.3)',  color: 'rgba(255,45,120,.8)'   },
+            };
+            const s = styles[type] || styles.info;
+            resultBanner.textContent = text;
+            resultBanner.style.background  = s.bg;
+            resultBanner.style.border      = `1px solid ${s.border}`;
+            resultBanner.style.color       = s.color;
+            resultBanner.style.textShadow  = type === 'jackpot' ? `0 0 15px ${s.color}` : 'none';
+        }
+
+        function setReelSymbol(reelEl, sym) {
+            reelEl.querySelector('.reel-emoji').textContent = sym;
+        }
+
+        /* ── Stake click ── */
+        stakeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (spinning) return;
+                const amt = parseInt(btn.dataset.amount);
+                if (amt > total) { showToast('INSUFFICIENT BALANCE'); return; }
+                pot   += amt;
+                total -= amt;
+                lastValidStake = amt;
+                renderBalance();
+                setResult(`POT: $${pot}`, 'info');
+
+                // visual feedback
+                btn.style.transform = 'translateY(0) scale(.95)';
+                setTimeout(() => btn.style.transform = '', 120);
+            });
+        });
+
+        /* ── Play button ── */
+        playBtn.addEventListener('click', () => {
+            if (spinning) return;
+            if (pot === 0) { showToast('STAKE AN AMOUNT FIRST'); return; }
+
+            spinning = true;
+            playBtn.disabled = true;
+            stakeButtons.forEach(b => b.classList.add('disabled'));
+
+            let track = 0;
+            const TICKS = 50; // ~2.5s at 50ms
+
+            const sym = () => SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+            let s1, s2, s3;
+
+            // Add spinning class
+            reels.forEach(r => r.classList.add('spinning'));
+
+            const game = setInterval(() => {
+                track++;
+                s1 = sym(); s2 = sym(); s3 = sym();
+                setReelSymbol(reels[0], s1);
+                setReelSymbol(reels[1], s2);
+                setReelSymbol(reels[2], s3);
+
+                if (track === TICKS) {
+                    clearInterval(game);
+                    reels.forEach(r => r.classList.remove('spinning'));
+                    resolveOutcome(s1, s2, s3);
+                }
+            }, 50);
+        });
+
+        /* ── Outcome ── */
+        function resolveOutcome(s1, s2, s3) {
+            // Remove old match classes
+            reels.forEach(r => r.classList.remove('match'));
+
+            const jackpot    = s1 === JACKPOT_SYM && s2 === JACKPOT_SYM && s3 === JACKPOT_SYM;
+            const threeKind  = s1 === s2 && s2 === s3 && !jackpot;
+            const twoKind    = (s1 === s2 || s2 === s3) && !jackpot;
+
+            if (jackpot) {
+                const winAmt = pot * 5;
+                total += winAmt;
+                setResult(`!!! JACKPOT +$${winAmt} !!!`, 'jackpot');
+                reels.forEach(r => r.classList.add('match'));
+                document.body.classList.add('jackpot-flash');
+                setTimeout(() => document.body.classList.remove('jackpot-flash'), 2400);
+
+            } else if (threeKind) {
+                const winAmt = pot * 2;
+                total += winAmt;
+                setResult(`THREE OF A KIND  +$${winAmt}`, 'win');
+                reels.forEach(r => r.classList.add('match'));
+
+            } else if (twoKind) {
+                const winAmt = Math.floor(pot * 1.3);
+                total += winAmt;
+                setResult(`TWO OF A KIND  +$${winAmt}`, 'win');
+                if (s1 === s2) { reels[0].classList.add('match'); reels[1].classList.add('match'); }
+                if (s2 === s3) { reels[1].classList.add('match'); reels[2].classList.add('match'); }
+
+            } else {
+                setResult('NO MATCH — TRY AGAIN', 'lose');
+                if (total < 10) {
+                    // Game over — reset with message
+                    setTimeout(() => {
+                        showToast('GAME OVER — BALANCE RESET');
+                        total = 1000;
+                        renderBalance();
+                        setResult('PLACE YOUR BETS', 'info');
+                    }, 1200);
+                }
+            }
+
+            pot = 0;
+            renderBalance();
+
+            // re-enable after short delay
+            setTimeout(() => {
+                spinning = false;
+                playBtn.disabled = false;
+                updateStakeButtons();
+            }, 600);
+        }
+
+        /* ── Init ── */
+        renderBalance();
+    })();
+    </script>
 </body>
 </html>
