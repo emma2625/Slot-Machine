@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WHOT! Nigerian Card Game</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --green:#1B4332;--green2:#2D6A4F;--green3:#40916C;--green4:#74C69D;
+  --gold:#F4A261;--gold2:#E76F51;--cream:#FEFAE0;--cream2:#FAF3D3;
+  --red:#C1121F;--blue:#023E8A;
+  --card-w:54px;--card-h:78px;
+}
+body{background:radial-gradient(ellipse at center,#2D6A4F,#1B4332 60%,#0D2818);font-family:'DM Sans',sans-serif;color:var(--cream);min-height:100vh;overflow-x:hidden}
+.screen{display:none;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+.screen.active{display:flex}
+
+/* HOME */
+.logo{font-family:'Syne',sans-serif;font-size:64px;font-weight:800;color:var(--gold);letter-spacing:-3px;text-shadow:4px 4px 0 #00000055;margin-bottom:4px}
+.logo-sub{font-size:11px;letter-spacing:6px;color:var(--green4);margin-bottom:36px;text-align:center}
+.home-btn{width:270px;padding:15px 0;border-radius:14px;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;letter-spacing:3px;margin:8px 0;transition:transform .15s,filter .15s}
+.home-btn:hover{transform:translateY(-2px);filter:brightness(1.1)}
+.home-btn.primary{background:var(--gold);color:var(--green)}
+.home-btn.secondary{background:transparent;color:var(--gold);border:2px solid var(--gold)}
+.home-btn:active{transform:scale(.97)}
+
+/* SETUP */
+.setup-card{background:#ffffff12;border:1px solid #ffffff22;border-radius:20px;padding:24px;width:100%;max-width:360px}
+.setup-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gold);margin-bottom:18px;text-align:center;letter-spacing:2px}
+.rule-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #ffffff15}
+.rule-label{font-size:14px;color:var(--cream2)}
+.toggle{width:44px;height:24px;background:#ffffff25;border-radius:12px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--gold)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s}
+.toggle.on::after{left:23px}
+.start-game-btn{width:100%;margin-top:20px;padding:14px;background:var(--gold);color:var(--green);border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:3px;transition:filter .15s}
+.start-game-btn:hover{filter:brightness(1.1)}
+
+/* BT */
+.bt-card{background:#ffffff12;border:1px solid #ffffff22;border-radius:20px;padding:28px 24px;width:100%;max-width:360px;text-align:center}
+.code-box{background:#00000088;border-radius:10px;padding:14px 20px;font-family:monospace;font-size:32px;letter-spacing:10px;color:var(--gold);margin:14px 0;border:1px solid #ffffff22}
+.code-input{width:100%;padding:13px;background:#00000088;border:1px solid #ffffff30;border-radius:10px;color:var(--gold);font-size:26px;letter-spacing:8px;text-align:center;font-family:monospace;outline:none;margin:8px 0;caret-color:var(--gold)}
+.bt-btn{width:100%;padding:13px;border:none;border-radius:12px;cursor:pointer;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:2px;margin:6px 0;transition:transform .15s,filter .15s}
+.bt-btn:hover{transform:translateY(-1px);filter:brightness(1.1)}
+.bt-btn.green{background:var(--gold);color:var(--green)}
+.bt-btn.outline{background:transparent;border:2px solid var(--gold);color:var(--gold)}
+.bt-status{font-size:13px;color:var(--green4);margin:8px 0 14px;min-height:20px}
+
+/* GAME */
+#gameScreen{padding:8px;justify-content:flex-start;padding-top:4px}
+.game-wrap{width:100%;max-width:440px;display:flex;flex-direction:column;gap:8px}
+
+.info-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#00000045;border-radius:10px;flex-wrap:wrap;gap:6px}
+.turn-badge{font-size:11px;letter-spacing:2px;font-family:'Syne',sans-serif;padding:5px 12px;border-radius:20px;font-weight:700}
+.turn-badge.yours{background:var(--gold);color:var(--green)}
+.turn-badge.theirs{background:#ffffff22;color:var(--cream)}
+.card-count{font-size:12px;color:var(--green4)}
+.quit-btn{background:transparent;border:1px solid #ffffff30;color:#ffffff88;padding:4px 10px;border-radius:14px;cursor:pointer;font-size:10px;letter-spacing:1px;font-family:'Syne',sans-serif}
+
+.opp-area{background:#00000022;border-radius:12px;padding:8px;min-height:60px}
+.opp-label{font-size:10px;letter-spacing:2px;color:var(--green4);margin-bottom:6px;font-family:'Syne',sans-serif}
+.opp-hand{display:flex;flex-wrap:wrap;gap:3px}
+.card-back{width:var(--card-w);height:var(--card-h);border-radius:8px;background:repeating-linear-gradient(135deg,#1a5c3a,#1a5c3a 5px,#2d6a4f 5px,#2d6a4f 10px);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:1px 2px 6px #00000055}
+
+.table-area{display:flex;align-items:center;justify-content:center;gap:20px;padding:4px 0}
+.pile-slot{display:flex;flex-direction:column;align-items:center;gap:5px}
+.pile-label{font-size:10px;letter-spacing:2px;color:var(--green4);font-family:'Syne',sans-serif}
+.top-card{width:80px;height:108px;border-radius:10px;border:3px solid var(--gold);display:flex;flex-direction:column;align-items:center;justify-content:center;background:#FEFAE0;box-shadow:0 4px 20px #00000088;gap:2px}
+.deck-pile{width:80px;height:108px;border-radius:10px;border:2px solid var(--green3);display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0d2818;box-shadow:0 4px 20px #00000088;cursor:pointer;user-select:none;gap:4px;transition:filter .15s}
+.deck-pile:hover{filter:brightness(1.3)}
+.deck-count{font-size:26px;font-weight:700;color:var(--green4);line-height:1}
+.deck-txt{font-size:9px;letter-spacing:2px;color:var(--green3);font-family:'Syne',sans-serif}
+
+.card{width:var(--card-w);height:var(--card-h);border-radius:8px;border:2px solid #cccccc33;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:4px 3px;position:relative;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .2s;box-shadow:1px 2px 6px #00000066;background:#FEFAE0;user-select:none}
+.card:hover{transform:translateY(-10px);box-shadow:2px 8px 20px #00000099}
+.card.playable{border-color:var(--gold);animation:pulse 1.4s infinite}
+.card.whot-card{background:linear-gradient(135deg,#FFD700,#F4A261)}
+.card.selected{transform:translateY(-16px)!important;border-color:var(--red)!important;box-shadow:0 8px 24px #C1121F99!important}
+.card.disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 #F4A26199}60%{box-shadow:0 0 0 7px #F4A26100}}
+
+.card-corner{font-size:8px;font-weight:700;position:absolute;line-height:1}
+.card-corner.tl{top:3px;left:4px}
+.card-corner.br{bottom:3px;right:4px;transform:rotate(180deg)}
+.card-center{display:flex;flex-direction:column;align-items:center;gap:1px}
+.card-sym{font-size:22px;line-height:1}
+.card-suitname{font-size:7px;font-weight:700;letter-spacing:1px}
+
+.player-hand{display:flex;flex-wrap:wrap;justify-content:center;gap:5px;padding:8px 4px;min-height:94px}
+
+.action-msg{text-align:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;padding:8px 14px;border-radius:10px;background:#00000055;min-height:36px;display:flex;align-items:center;justify-content:center}
+.action-msg.win{color:var(--gold)}
+.action-msg.lose{color:var(--red)}
+.action-msg.info{color:var(--cream)}
+.action-msg.warn{color:#FFD700}
+
+.pending-row{text-align:center;font-size:12px;color:var(--gold);font-weight:600;min-height:18px;letter-spacing:1px}
+
+/* SUIT PICKER */
+.overlay{display:none;position:fixed;inset:0;background:#00000088;z-index:100;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.picker-box{background:var(--green2);border:2px solid var(--gold);border-radius:20px;padding:24px;text-align:center;max-width:310px;width:92%}
+.picker-title{font-family:'Syne',sans-serif;font-size:18px;color:var(--gold);margin-bottom:16px;letter-spacing:2px}
+.suit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.suit-opt{padding:14px 8px;border-radius:12px;border:2px solid #ffffff30;background:#ffffff12;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:1px;color:var(--cream);transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:5px}
+.suit-opt:hover{border-color:var(--gold);transform:scale(1.06)}
+.suit-opt .s{font-size:26px;line-height:1}
+
+/* GAME OVER */
+.gameover-box{background:var(--green2);border:3px solid var(--gold);border-radius:24px;padding:32px 24px;text-align:center;max-width:340px;width:92%}
+.gameover-title{font-family:'Syne',sans-serif;font-size:40px;font-weight:800;margin-bottom:8px}
+.gameover-sub{font-size:13px;color:var(--green4);margin-bottom:24px;letter-spacing:1px}
+.gameover-btn{width:100%;padding:13px;background:var(--gold);color:var(--green);border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:2px;margin-top:8px;transition:filter .15s}
+.gameover-btn:hover{filter:brightness(1.1)}
+.gameover-btn.outline{background:transparent;border:2px solid var(--gold);color:var(--gold)}
+
+/* LAST CARD TOAST */
+.toast{position:fixed;top:56px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--green);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:4px;padding:8px 28px;border-radius:20px;z-index:400;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+.back-btn{align-self:flex-start;background:transparent;border:1px solid #ffffff30;color:var(--cream);padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;letter-spacing:2px;margin-bottom:10px;font-family:'Syne',sans-serif}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="screen active" id="homeScreen">
+  <div class="logo">WHOT!</div>
+  <div class="logo-sub">NIGERIAN CARD GAME</div>
+  <button class="home-btn primary" onclick="goTo('soloSetup')">🤖 PLAY SOLO vs AI</button>
+  <button class="home-btn secondary" onclick="goTo('btMenu')">📡 PLAY MULTIPLAYER</button>
+</div>
+
+<!-- SOLO SETUP -->
+<div class="screen" id="soloSetupScreen">
+  <button class="back-btn" onclick="goTo('home')">← BACK</button>
+  <div class="setup-card">
+    <div class="setup-title">GAME RULES</div>
+    <div class="rule-row">
+      <span class="rule-label">2 → Stack (opponent picks 2)</span>
+      <div class="toggle on" id="r-stack2" onclick="toggleRule('stack2',this)"></div>
+    </div>
+    <div class="rule-row">
+      <span class="rule-label">5 → Stack (opponent picks 3)</span>
+      <div class="toggle on" id="r-stack5" onclick="toggleRule('stack5',this)"></div>
+    </div>
+    <div class="rule-row">
+      <span class="rule-label">8 → Suspension (skip turn)</span>
+      <div class="toggle on" id="r-susp" onclick="toggleRule('susp',this)"></div>
+    </div>
+    <div class="rule-row">
+      <span class="rule-label">14 → General Market (all pick 1)</span>
+      <div class="toggle on" id="r-gen" onclick="toggleRule('gen',this)"></div>
+    </div>
+    <div class="rule-row">
+      <span class="rule-label">Must say "Last Card!"</span>
+      <div class="toggle on" id="r-lc" onclick="toggleRule('lc',this)"></div>
+    </div>
+    <button class="start-game-btn" onclick="startSolo()">START GAME</button>
+  </div>
+</div>
+
+<!-- BT MENU -->
+<div class="screen" id="btMenuScreen">
+  <button class="back-btn" onclick="goTo('home')">← BACK</button>
+  <div class="bt-card">
+    <div style="font-size:42px;margin-bottom:10px">📡</div>
+    <div style="font-family:'Syne',sans-serif;font-size:22px;color:var(--gold);margin-bottom:6px;font-weight:800">MULTIPLAYER</div>
+    <div style="font-size:13px;color:var(--green4);margin-bottom:24px;line-height:1.5">Open this page in two browser tabs or on two devices on the same network. Use a room code to connect!</div>
+    <button class="bt-btn green" onclick="hostGame()">HOST A GAME</button>
+    <button class="bt-btn outline" onclick="goTo('joinGame')">JOIN A GAME</button>
+  </div>
+</div>
+
+<!-- HOST LOBBY -->
+<div class="screen" id="hostLobbyScreen">
+  <button class="back-btn" onclick="cancelHost()">← BACK</button>
+  <div class="bt-card" style="text-align:left">
+    <div style="font-family:'Syne',sans-serif;font-size:20px;color:var(--gold);margin-bottom:4px;font-weight:800;text-align:center">HOST LOBBY</div>
+    <div style="font-size:12px;color:var(--green4);text-align:center;margin-bottom:4px">Share this code with your opponent</div>
+    <div class="code-box" id="roomCodeDisplay">----</div>
+    <div class="bt-status" id="hostStatus">Waiting for opponent to join...</div>
+
+    <div style="font-size:10px;letter-spacing:2px;color:var(--green4);margin-bottom:8px;font-family:'Syne',sans-serif">SET RULES (host decides)</div>
+    <div class="rule-row"><span class="rule-label" style="font-size:13px">Stack 2s (pick 2)</span><div class="toggle on" id="hr-stack2" onclick="toggleRule('stack2',this)"></div></div>
+    <div class="rule-row"><span class="rule-label" style="font-size:13px">Stack 5s (pick 3)</span><div class="toggle on" id="hr-stack5" onclick="toggleRule('stack5',this)"></div></div>
+    <div class="rule-row"><span class="rule-label" style="font-size:13px">8 = Suspension</span><div class="toggle on" id="hr-susp" onclick="toggleRule('susp',this)"></div></div>
+    <div class="rule-row"><span class="rule-label" style="font-size:13px">14 = General Market</span><div class="toggle on" id="hr-gen" onclick="toggleRule('gen',this)"></div></div>
+    <div class="rule-row"><span class="rule-label" style="font-size:13px">Must say "Last Card!"</span><div class="toggle on" id="hr-lc" onclick="toggleRule('lc',this)"></div></div>
+  </div>
+</div>
+
+<!-- JOIN LOBBY -->
+<div class="screen" id="joinGameScreen">
+  <button class="back-btn" onclick="cancelJoin()">← BACK</button>
+  <div class="bt-card">
+    <div style="font-family:'Syne',sans-serif;font-size:20px;color:var(--gold);margin-bottom:6px;font-weight:800">JOIN GAME</div>
+    <div style="font-size:13px;color:var(--green4);margin-bottom:12px">Enter the 4-character room code</div>
+    <input class="code-input" id="joinCodeInput" maxlength="4" placeholder="CODE" oninput="this.value=this.value.toUpperCase()">
+    <div class="bt-status" id="joinStatus">Ready to connect</div>
+    <button class="bt-btn green" onclick="joinGame()">JOIN</button>
+  </div>
+</div>
+
+<!-- GAME BOARD -->
+<div class="screen" id="gameScreen">
+  <div class="game-wrap">
+    <div style="font-size:11px;color:var(--green4);text-align:center;letter-spacing:1px;min-height:16px" id="peerInfo"></div>
+    <div class="info-bar">
+      <span class="turn-badge yours" id="turnBadge">YOUR TURN</span>
+      <span class="card-count" id="cardCountInfo"></span>
+      <button class="quit-btn" onclick="confirmQuit()">QUIT</button>
+    </div>
+
+    <div class="opp-area">
+      <div class="opp-label" id="oppLabel">AI'S CARDS</div>
+      <div class="opp-hand" id="oppHand"></div>
+    </div>
+
+    <div class="table-area">
+      <div class="pile-slot">
+        <div class="pile-label">MARKET</div>
+        <div class="deck-pile" onclick="drawFromMarket()">
+          <span class="deck-count" id="deckCount">40</span>
+          <span class="deck-txt">DRAW</span>
+        </div>
+      </div>
+      <div class="pile-slot">
+        <div class="pile-label">TOP CARD</div>
+        <div class="top-card" id="topCard"></div>
+      </div>
+    </div>
+
+    <div class="pending-row" id="pendingRow"></div>
+    <div class="action-msg info" id="actionMsg">Welcome to WHOT!</div>
+    <div class="player-hand" id="playerHand"></div>
+    <div style="font-size:10px;color:var(--green4);text-align:center;padding-bottom:4px;letter-spacing:1px">TAP A CARD TO PLAY • TAP MARKET TO DRAW</div>
+  </div>
+</div>
+
+<!-- SUIT PICKER -->
+<div class="overlay" id="suitPicker">
+  <div class="picker-box">
+    <div class="picker-title">CALL A SHAPE</div>
+    <div class="suit-grid">
+      <div class="suit-opt" onclick="pickSuit('Circle')"><span class="s" style="color:#E76F51">●</span>CIRCLE</div>
+      <div class="suit-opt" onclick="pickSuit('Star')"><span class="s" style="color:#F4A261">★</span>STAR</div>
+      <div class="suit-opt" onclick="pickSuit('Cross')"><span class="s" style="color:#4895EF">✚</span>CROSS</div>
+      <div class="suit-opt" onclick="pickSuit('Triangle')"><span class="s" style="color:#74C69D">▲</span>TRIANGLE</div>
+      <div class="suit-opt" onclick="pickSuit('Square')"><span class="s" style="color:#F4D35E">■</span>SQUARE</div>
+    </div>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div class="overlay" id="gameoverOverlay">
+  <div class="gameover-box">
+    <div class="gameover-title" id="goTitle">🎉 YOU WIN!</div>
+    <div class="gameover-sub" id="goSub">All cards played!</div>
+    <button class="gameover-btn" onclick="playAgain()">PLAY AGAIN</button>
+    <button class="gameover-btn outline" style="margin-top:8px" onclick="goTo('home')">MAIN MENU</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+function goTo(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById(name+'Screen');
+  if(el)el.classList.add('active');
+}
+
+// ══════════════════════════════════════
+// CARD DATA
+// ══════════════════════════════════════
+const SUITS=['Circle','Star','Cross','Triangle','Square'];
+const SYMS={Circle:'●',Star:'★',Cross:'✚',Triangle:'▲',Square:'■'};
+const COLORS={Circle:'#E76F51',Star:'#F4A261',Cross:'#4895EF',Triangle:'#74C69D',Square:'#F4D35E'};
+const NUMS=[1,2,3,4,5,7,8,10,11,12,13,14];
+
+function buildDeck(){
+  let d=[];
+  SUITS.forEach(s=>NUMS.forEach(n=>d.push({suit:s,num:n,id:s+n})));
+  SUITS.forEach(s=>d.push({suit:'WHOT',num:20,id:'W'+s,isWhot:true}));
+  return shuffle(d);
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+// ══════════════════════════════════════
+// RULES
+// ══════════════════════════════════════
+const RULES={stack2:true,stack5:true,susp:true,gen:true,lc:true};
+function toggleRule(key,el){
+  RULES[key]=!RULES[key];
+  el.classList.toggle('on',RULES[key]);
+}
+
+// ══════════════════════════════════════
+// GAME STATE
+// ══════════════════════════════════════
+let G={};
+let selectedIdx=-1;
+let suitCB=null;
+
+function initGame(vsAI,pName,oName){
+  let deck=buildDeck();
+  let firstCard;
+  do{firstCard=deck.shift();}while(firstCard.isWhot);
+  G={
+    vsAI,pName,oName,
+    pHand:deck.splice(0,5),
+    oHand:deck.splice(0,5),
+    deck,
+    pile:[firstCard],
+    curSuit:firstCard.suit,
+    curNum:firstCard.num,
+    pTurn:true,
+    pending:0,
+    over:false,
+    lcClaimed:false,
+  };
+  selectedIdx=-1;
+}
+
+function startSolo(){
+  initGame(true,'YOU','AI');
+  goTo('game');
+  document.getElementById('peerInfo').textContent='';
+  document.getElementById('oppLabel').textContent="AI'S CARDS";
+  render();
+  setMsg('Your turn — play a card or tap DRAW!','info');
+}
+
+function playAgain(){
+  document.getElementById('gameoverOverlay').classList.remove('open');
+  if(G.vsAI)startSolo();
+  else goTo('home');
+}
+function confirmQuit(){if(confirm('Quit this game?')){cleanupBT();goTo('home');}}
+
+// ══════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════
+function cardHTML(card,idx,playable,selected){
+  const cls=['card'];
+  if(card.isWhot)cls.push('whot-card');
+  if(playable)cls.push('playable');
+  if(selected)cls.push('selected');
+  if(!playable&&G.pTurn)cls.push('disabled');
+  const c=card.isWhot?'#B8860B':COLORS[card.suit];
+  const sym=card.isWhot?'🃏':SYMS[card.suit];
+  const sn=card.isWhot?'WHOT':card.suit.slice(0,3).toUpperCase();
+  return `<div class="${cls.join(' ')}" onclick="clickCard(${idx})" title="${card.isWhot?'WHOT':card.suit+' '+card.num}">
+    <span class="card-corner tl" style="color:${c}">${card.num}</span>
+    <div class="card-center">
+      <span class="card-sym">${sym}</span>
+      <span class="card-suitname" style="color:${c}">${sn}</span>
+    </div>
+    <span class="card-corner br" style="color:${c}">${card.num}</span>
+  </div>`;
+}
+
+function topCardHTML(card){
+  if(!card)return'';
+  const dispSuit=card.isWhot?G.curSuit:card.suit;
+  const sym=SYMS[dispSuit]||'🃏';
+  const col=COLORS[dispSuit]||'#B8860B';
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+    <span style="font-size:30px;line-height:1">${card.isWhot?'🃏':sym}</span>
+    <span style="font-size:9px;font-weight:700;color:${col};letter-spacing:1px">${dispSuit.slice(0,3).toUpperCase()}</span>
+    <span style="font-size:20px;font-weight:800;color:#222;line-height:1">${card.num}</span>
+  </div>`;
+}
+
+function getPlayable(){
+  const s=new Set();
+  if(!G.pTurn)return s;
+  G.pHand.forEach((c,i)=>{
+    if(G.pending>0){
+      if(RULES.stack2&&G.curNum===2&&c.num===2)s.add(i);
+      else if(RULES.stack5&&G.curNum===5&&c.num===5)s.add(i);
+      else if(c.isWhot)s.add(i);
+    } else {
+      if(c.isWhot)s.add(i);
+      else if(c.suit===G.curSuit||c.num===G.curNum)s.add(i);
+    }
+  });
+  return s;
+}
+
+function render(){
+  const top=G.pile[G.pile.length-1];
+  document.getElementById('topCard').innerHTML=topCardHTML(top);
+  document.getElementById('deckCount').textContent=G.deck.length;
+  document.getElementById('cardCountInfo').textContent=`You: ${G.pHand.length}  •  ${G.oName}: ${G.oHand.length}`;
+
+  const tb=document.getElementById('turnBadge');
+  tb.textContent=G.pTurn?'YOUR TURN':G.oName+"'S TURN";
+  tb.className='turn-badge '+(G.pTurn?'yours':'theirs');
+
+  const pr=document.getElementById('pendingRow');
+  pr.textContent=G.pending>0?`⚡ ${G.pending} cards to pick from market — play a counter or tap DRAW`:'';
+
+  // Opp hand
+  const oh=document.getElementById('oppHand');
+  oh.innerHTML=G.oHand.map(()=>'<div class="card-back">🂠</div>').join('');
+
+  // Player hand
+  const playable=getPlayable();
+  const ph=document.getElementById('playerHand');
+  ph.innerHTML=G.pHand.map((c,i)=>cardHTML(c,i,playable.has(i),i===selectedIdx)).join('');
+}
+
+// ══════════════════════════════════════
+// PLAYER INTERACTION
+// ══════════════════════════════════════
+function clickCard(idx){
+  if(!G.pTurn||G.over)return;
+  const pl=getPlayable();
+  if(!pl.has(idx)){return;}
+  selectedIdx=idx;
+  render();
+  const card=G.pHand[idx];
+  if(card.isWhot){
+    suitCB=()=>playCard(idx);
+    document.getElementById('suitPicker').classList.add('open');
+  } else {
+    setTimeout(()=>playCard(idx),80);
+  }
+}
+
+function pickSuit(suit){
+  document.getElementById('suitPicker').classList.remove('open');
+  G.curSuit=suit;
+  if(suitCB){suitCB();suitCB=null;}
+}
+
+function playCard(idx){
+  const card=G.pHand.splice(idx,1)[0];
+  selectedIdx=-1;
+  G.pile.push(card);
+  if(!card.isWhot){G.curSuit=card.suit;G.curNum=card.num;}
+  else G.curNum=20;
+
+  if(G.pHand.length===1&&RULES.lc){
+    showToast('LAST CARD!');
+  }
+
+  applyEffect(card,'p');
+}
+
+function drawFromMarket(){
+  if(!G.pTurn||G.over)return;
+  const pl=getPlayable();
+  if(G.pending>0){
+    const n=G.pending;G.pending=0;
+    drawCards('p',n);
+    setMsg(`You drew ${n} cards from market.`,'warn');
+    G.pTurn=false;render();
+    setTimeout(aiTurn,1000);
+    return;
+  }
+  if(pl.size>0){setMsg('You have playable cards!','warn');return;}
+  drawCards('p',1);
+  setMsg('No match — drew 1 from market.','info');
+  G.pTurn=false;render();
+  setTimeout(aiTurn,900);
+}
+
+function drawCards(who,n){
+  for(let i=0;i<n;i++){
+    if(G.deck.length===0){
+      const saved=G.pile.pop();
+      G.deck=shuffle(G.pile);
+      G.pile=[saved];
+    }
+    if(G.deck.length===0)break;
+    if(who==='p')G.pHand.push(G.deck.shift());
+    else G.oHand.push(G.deck.shift());
+  }
+}
+
+function applyEffect(card,who){
+  const other=who==='p'?'o':'p';
+  let msg='';
+  let skipReturn=false;
+
+  if(card.num===2&&RULES.stack2){
+    G.pending+=2;
+    msg=`${who==='p'?'You played':'AI played'} a 2! Opponent picks ${G.pending} if they can't counter.`;
+  } else if(card.num===5&&RULES.stack5){
+    G.pending+=3;
+    msg=`${who==='p'?'You played':'AI played'} a 5! Opponent picks ${G.pending} if they can't counter.`;
+  } else if(card.num===8&&RULES.susp){
+    G.pending=0;
+    msg=`${who==='p'?'You suspended AI!':'AI suspended you!'} ${other==='p'?'Draw a card to skip.':''}`;
+    checkWin(who);render();
+    if(who==='p'){
+      // suspend AI: AI's turn is skipped, goes back to player
+      G.pTurn=true;
+      setMsg(msg,'warn');
+      render();
+      return;
+    } else {
+      // suspend player: player turn skipped
+      G.pTurn=false;
+      setMsg(msg,'warn');
+      render();
+      setTimeout(aiTurn,1200);
+      return;
+    }
+  } else if(card.num===14&&RULES.gen){
+    G.pending=0;
+    drawCards(other,1);
+    msg=`General Market! ${other==='p'?'You drew 1 card.':'AI drew 1 card.'}`;
+  } else if(card.isWhot){
+    G.pending=0;
+    msg=`WHOT! Suit called: ${G.curSuit}`;
+  } else {
+    G.pending=0;
+    msg='';
+  }
+
+  setMsg(msg||`${who==='p'?'You played':'AI played'} ${card.isWhot?'WHOT':card.suit+' '+card.num}.`,'info');
+  checkWin(who);
+  render();
+
+  if(!G.over){
+    if(who==='p'){
+      G.pTurn=false;
+      if(G.vsAI)setTimeout(aiTurn,950);
+      else{G.pTurn=false;sendBT({type:'play',card,curSuit:G.curSuit,curNum:G.curNum,pending:G.pending,oCount:G.oHand.length});}
+    } else {
+      G.pTurn=true;
+    }
+  }
+}
+
+function checkWin(who){
+  const hand=who==='p'?G.pHand:G.oHand;
+  if(hand.length===0){
+    G.over=true;
+    const won=who==='p';
+    document.getElementById('goTitle').textContent=won?'🎉 YOU WIN!':'😔 YOU LOSE!';
+    document.getElementById('goTitle').style.color=won?'var(--gold)':'var(--red)';
+    document.getElementById('goSub').textContent=won?'All cards played! Well done!':'Opponent cleared their hand first.';
+    document.getElementById('gameoverOverlay').classList.add('open');
+  }
+}
+
+// ══════════════════════════════════════
+// AI LOGIC
+// ══════════════════════════════════════
+function aiTurn(){
+  if(G.over||G.pTurn)return;
+
+  // Pending draw — can AI counter?
+  if(G.pending>0){
+    const counter=G.oHand.find(c=>
+      (RULES.stack2&&G.curNum===2&&c.num===2)||
+      (RULES.stack5&&G.curNum===5&&c.num===5)||
+      c.isWhot
+    );
+    if(counter){
+      const idx=G.oHand.indexOf(counter);
+      G.oHand.splice(idx,1);
+      G.pile.push(counter);
+      if(!counter.isWhot){G.curSuit=counter.suit;G.curNum=counter.num;}
+      else{G.curNum=20;G.curSuit=aiBestSuit();}
+      if(counter.num===2&&RULES.stack2)G.pending+=2;
+      else if(counter.num===5&&RULES.stack5)G.pending+=3;
+      else G.pending=0;
+      if(G.oHand.length===1&&RULES.lc)showToast('AI: LAST CARD!');
+      setMsg(`AI countered with ${counter.isWhot?'WHOT →'+G.curSuit:counter.suit+' '+counter.num}! Stack is now ${G.pending}.`,'info');
+      checkWin('o');render();
+      if(!G.over)G.pTurn=true;
+      return;
+    } else {
+      const n=G.pending;G.pending=0;
+      drawCards('o',n);
+      setMsg(`AI drew ${n} cards from market.`,'info');
+      render();G.pTurn=true;return;
+    }
+  }
+
+  // Find playable cards for AI
+  const playable=G.oHand.filter(c=>c.isWhot||c.suit===G.curSuit||c.num===G.curNum);
+  if(playable.length===0){
+    drawCards('o',1);
+    setMsg('AI drew 1 from market — no playable card.','info');
+    render();G.pTurn=true;return;
+  }
+
+  // Priority: action cards first
+  const prio=[5,2,8,14,20];
+  let best=null;
+  for(const p of prio){
+    best=playable.find(c=>c.num===p);
+    if(best)break;
+  }
+  if(!best)best=playable[Math.floor(Math.random()*playable.length)];
+
+  const idx=G.oHand.indexOf(best);
+  G.oHand.splice(idx,1);
+  G.pile.push(best);
+
+  if(best.isWhot){
+    G.curSuit=aiBestSuit();
+    G.curNum=20;
+  } else {
+    G.curSuit=best.suit;
+    G.curNum=best.num;
+  }
+
+  if(G.oHand.length===1&&RULES.lc)showToast('AI: LAST CARD!');
+  applyEffect(best,'o');
+}
+
+function aiBestSuit(){
+  const cnt={};
+  G.oHand.forEach(c=>{if(!c.isWhot)cnt[c.suit]=(cnt[c.suit]||0)+1;});
+  const e=Object.entries(cnt);
+  if(!e.length)return SUITS[Math.floor(Math.random()*SUITS.length)];
+  return e.sort((a,b)=>b[1]-a[1])[0][0];
+}
+
+function setMsg(txt,type){
+  const el=document.getElementById('actionMsg');
+  el.textContent=txt;
+  el.className='action-msg '+(type||'info');
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ══════════════════════════════════════
+// MULTIPLAYER (BroadcastChannel)
+// ══════════════════════════════════════
+let bc=null,myRole='',roomCode='';
+
+function genCode(){return Math.random().toString(36).slice(2,6).toUpperCase();}
+
+function hostGame(){
+  roomCode=genCode();
+  document.getElementById('roomCodeDisplay').textContent=roomCode;
+  document.getElementById('hostStatus').textContent='Waiting for opponent to join...';
+  goTo('hostLobby');
+  bc=new BroadcastChannel('whot_'+roomCode);
+  myRole='host';
+  bc.onmessage=e=>handleBT(e.data);
+}
+
+function cancelHost(){cleanupBT();goTo('btMenu');}
+function cancelJoin(){cleanupBT();goTo('btMenu');}
+function cleanupBT(){if(bc){bc.close();bc=null;}myRole='';roomCode='';}
+
+function joinGame(){
+  const code=document.getElementById('joinCodeInput').value.trim().toUpperCase();
+  if(code.length<4){document.getElementById('joinStatus').textContent='Enter a 4-character code.';return;}
+  roomCode=code;myRole='guest';
+  bc=new BroadcastChannel('whot_'+code);
+  bc.onmessage=e=>handleBT(e.data);
+  document.getElementById('joinStatus').textContent='Connecting...';
+  bc.postMessage({type:'join',code});
+}
+
+function handleBT(d){
+  if(d.type==='join'&&myRole==='host'){
+    document.getElementById('hostStatus').textContent='Opponent joined! Starting game...';
+    // Build and send game state
+    const deck=buildDeck();
+    const hHand=deck.splice(0,5);
+    const gHand=deck.splice(0,5);
+    let first;do{first=deck.shift();}while(first.isWhot);
+    const gameData={type:'start',hHand,gHand,deck,first,rules:{...RULES}};
+    bc.postMessage(gameData);
+    // Host plays as player (goes first)
+    G={vsAI:false,pName:'HOST',oName:'GUEST',pHand:hHand,oHand:gHand,deck:[...deck],pile:[first],curSuit:first.suit,curNum:first.num,pTurn:true,pending:0,over:false};
+    document.getElementById('peerInfo').textContent='🟢 CONNECTED — YOU ARE HOST';
+    document.getElementById('oppLabel').textContent="GUEST'S CARDS";
+    setTimeout(()=>{goTo('game');render();setMsg('Your turn!','info');},600);
+  }
+  if(d.type==='start'&&myRole==='guest'){
+    Object.assign(RULES,d.rules);
+    G={vsAI:false,pName:'GUEST',oName:'HOST',pHand:d.gHand,oHand:d.hHand.map(()=>({suit:'?',num:'?',isBack:true})),deck:[],pile:[d.first],curSuit:d.first.suit,curNum:d.first.num,pTurn:false,pending:0,over:false};
+    document.getElementById('peerInfo').textContent='🟢 CONNECTED — YOU ARE GUEST';
+    document.getElementById('oppLabel').textContent="HOST'S CARDS";
+    goTo('game');render();setMsg("Host's turn",'info');
+    document.getElementById('joinStatus').textContent='Connected!';
+  }
+  if(d.type==='play'){
+    // opponent played a card
+    if(G.oHand.length>0)G.oHand.shift();
+    const card=d.card;
+    G.pile.push(card);
+    G.curSuit=d.curSuit;G.curNum=d.curNum;G.pending=d.pending||0;
+    if(G.oHand.length===1&&RULES.lc)showToast(`${G.oName}: LAST CARD!`);
+    setMsg(`${G.oName} played ${card.isWhot?'WHOT →'+G.curSuit:card.suit+' '+card.num}.`,'info');
+    checkWin('o');
+    G.pTurn=true;render();
+  }
+  if(d.type==='draw'){
+    G.oHand.push({suit:'?',num:'?',isBack:true});
+    G.pending=d.pending||0;
+    setMsg(`${G.oName} drew from market.`,'info');
+    G.pTurn=true;render();
+  }
+  if(d.type==='suspend'){
+    setMsg(`${G.oName} played an 8 — you are suspended! Your turn is skipped.`,'warn');
+    G.pTurn=false;render();
+    // auto-skip: draw 1 and pass back
+    setTimeout(()=>{
+      drawCards('p',1);
+      render();
+      G.pTurn=false;
+      sendBT({type:'skipDone'});
+    },1400);
+  }
+  if(d.type==='skipDone'){
+    G.pTurn=true;render();setMsg('Opponent was suspended. Your turn!','info');
+  }
+}
+
+function sendBT(data){if(bc)bc.postMessage(data);}
+</script>
+</body>
+</html>
